@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Input Pengajuan Fee</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'media', 
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-active': '#4f46e5', 
+                        'primary-dark': '#6366f1', 
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .advanced-fields {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out, opacity 0.5s;
+            padding-top: 0;
+            padding-bottom: 0;
+            opacity: 0;
+        }
+        .advanced-fields.show {
+            max-height: 150px; 
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            opacity: 1;
+        }
+        #advanced_task {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        /* Gaya Toast Notification */
+        #toast-container {
+        position: fixed;
+        /* Ganti dari bottom/right ke top/center */
+        top: 1rem;
+        left: 50%;
+        transform: translateX(-50%); /* Memastikan berada tepat di tengah */
+        z-index: 1010;
+        display: flex; /* Untuk menampung jika ada lebih dari satu toast */
+        flex-direction: column;
+        align-items: center; /* Memastikan toast berada di tengah container */
+    }
+    .toast {
+        opacity: 0;
+        /* Ganti transisi agar muncul dari atas */
+        transform: translateY(-100%); 
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        margin-bottom: 0.5rem; /* Jarak antar toast jika ada lebih dari satu */
+        /* Tambahkan lebar agar tidak terlalu lebar di tengah */
+        width: 100%;
+        max-width: 400px; 
+    }
+    .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-screen p-4 transition-colors duration-500">
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-2xl transition-colors duration-500">
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6">Form Input</h2>
+        <form id="dataForm">
+            
+            <div id="checkDataContainer" class="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900 rounded-lg border border-yellow-200 dark:border-yellow-700 transition-colors duration-500">
+                <p class="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Apakah vendor sudah mengisi Form Data?</p>
+                <div class="flex space-x-6">
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="data_check" value="Sudah" id="data_sudah" class="form-radio text-green-600 h-5 w-5 dark:bg-gray-700 dark:border-gray-500" required>
+                        <span class="ml-2 text-gray-700 dark:text-gray-300">Sudah</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="data_check" value="Belum" id="data_belum" class="form-radio text-red-600 h-5 w-5 dark:bg-gray-700 dark:border-gray-500">
+                        <span class="ml-2 text-gray-700 dark:text-gray-300">Belum</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="advancedTaskContainer" class="mb-6 flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors duration-500">
+                <p class="text-lg font-semibold text-gray-700 dark:text-gray-300">Advanced Task</p>
+                <input type="checkbox" id="advanced_task" class="text-primary-active border-gray-300 rounded focus:ring-primary-active dark:bg-gray-600 dark:border-gray-500">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="pic" class="block text-sm font-medium text-gray-700 dark:text-gray-300">PIC</label>
+                    <input type="text" id="pic" name="pic" required class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md shadow-sm focus:ring-primary-active focus:border-primary-active">
+                </div>
+                <div>
+                    <label for="nama_kegiatan" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Kegiatan</label>
+                    <input type="text" id="nama_kegiatan" name="nama_kegiatan" required class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md shadow-sm focus:ring-primary-active focus:border-primary-active">
+                </div>
+                <div>
+                    <label for="nama_vendor" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Vendor</label>
+                    <input type="text" id="nama_vendor" name="nama_vendor" required class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md shadow-sm focus:ring-primary-active focus:border-primary-active">
+                </div>
+                <div>
+                    <label for="kode" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Kode</label>
+                    <input type="text" id="kode" name="kode" required class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md shadow-sm focus:ring-primary-active focus:border-primary-active">
+                </div>
+                <div>
+                    <label for="harga" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Harga</label>
+                    <input type="text" id="harga" name="harga" required inputmode="numeric" class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md shadow-sm focus:ring-primary-active focus:border-primary-active">
+                </div>
+                <div>
+                    <label for="brand" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Brand</label>
+                    <select id="brand" name="brand" required class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md shadow-sm focus:ring-primary-active focus:border-primary-active">
+                        <option value="" disabled selected>Memuat Brand...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="advancedFields" class="advanced-fields bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg mt-4 px-4 transition duration-500 ease-in-out">
+                <div class="space-y-4">
+                    <h3 class="text-xl font-semibold text-red-700 dark:text-red-400 pt-2">Detail Advanced Task</h3>
+                    <div>
+                        <label for="tanggal_task" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Estimasi Tanggal Selesai</label>
+                        <input type="date" id="tanggal_task" name="tanggal_task" class="mt-1 block w-full px-2 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500" disabled>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="mt-6 w-full bg-primary-active hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition duration-150 ease-in-out dark:bg-primary-dark dark:hover:bg-indigo-600">
+                Kirim Data
+            </button>
+        </form>
+    </div>
+
+    <div id="dataCheckModal" class="modal-overlay">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl max-w-sm w-full transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
+            <h3 class="text-2xl font-bold text-red-600 dark:text-red-400 mb-4">🚨 Data Belum Lengkap!</h3>
+            <p class="text-gray-700 dark:text-gray-300 mb-6">Anda harus memastikan semua data pendukung telah tersedia sebelum melanjutkan pengisian formulir ini.</p>
+            <button onclick="hideModal()" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded-lg transition duration-150">
+                Tutup & Perbaiki
+            </button>
+        </div>
+    </div>
+    
+    <div id="toast-container"></div>
+
+    <script>
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxi78hSKpgQTi_efSulodQpjUYQUDhQokoJsL7d66R9KCRlV8UOCuZB_tLZ6n6GUoW6pw/exec"; 
+        
+        const form = document.getElementById('dataForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const hargaInput = document.getElementById('harga');
+        const brandSelect = document.getElementById('brand');
+
+        const advancedTaskCheckbox = document.getElementById('advanced_task');
+        const advancedFieldsDiv = document.getElementById('advancedFields');
+        const tanggalTaskInput = document.getElementById('tanggal_task');
+        
+        const dataCheckRadio = document.getElementsByName('data_check');
+        const dataBelum = document.getElementById('data_belum');
+        const modalOverlay = document.getElementById('dataCheckModal');
+        const modalContent = document.getElementById('modalContent');
+        
+        function showModal() {
+            modalOverlay.classList.add('open');
+            modalContent.classList.remove('scale-95', 'opacity-0');
+            modalContent.classList.add('scale-100', 'opacity-100');
+        }
+
+        function hideModal() {
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modalOverlay.classList.remove('open');
+            }, 300);
+            
+            dataBelum.checked = false; 
+            
+            document.getElementById('checkDataContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const colorClass = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+            const icon = type === 'success' ? '✅' : '❌';
+            
+            const toast = document.createElement('div');
+            toast.className = `toast p-4 rounded-lg shadow-xl mb-3 text-white max-w-sm ${colorClass}`;
+            toast.innerHTML = `<div class="flex items-center"><span class="text-xl mr-2">${icon}</span><span>${message}</span></div>`;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300); 
+            }, 4000); 
+        }
+
+        dataCheckRadio.forEach(radio => {
+            radio.addEventListener('change', function() {
+                const fields = form.querySelectorAll('input:not([name="data_check"]), select, button[type="submit"]');
+                if (this.value === 'Belum' && this.checked) {
+                    showModal();
+                    fields.forEach(el => { if (el.id !== 'submitBtn') el.disabled = true; });
+                    submitBtn.disabled = true;
+                } else if (this.value === 'Sudah' && this.checked) {
+                    fields.forEach(el => { el.disabled = false; });
+                    submitBtn.disabled = false;
+                    
+                    if (!advancedTaskCheckbox.checked) {
+                        tanggalTaskInput.disabled = true;
+                    }
+                }
+            });
+        });
+
+        advancedTaskCheckbox.addEventListener('change', function() {
+            if (document.getElementById('data_sudah').checked) {
+                if (this.checked) {
+                    advancedFieldsDiv.classList.add('show');
+                    tanggalTaskInput.required = true;
+                    tanggalTaskInput.disabled = false;
+                } else {
+                    advancedFieldsDiv.classList.remove('show');
+                    tanggalTaskInput.required = false;
+                    tanggalTaskInput.disabled = true;
+                    tanggalTaskInput.value = ''; 
+                }
+            } else {
+                this.checked = false; 
+                showModal();
+            }
+        });
+        
+        function formatRupiah(angka) { 
+            let number_string = angka.replace(/[^,\d]/g, '').toString(); 
+            let split = number_string.split(',');
+            let sisa = split[0].length % 3;
+            let rupiah = split[0].substr(0, sisa);
+            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+            rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+            return rupiah;
+        }
+
+        hargaInput.addEventListener('keyup', function(e) {
+            let value = e.target.value;
+            if ((value.match(/,/g) || []).length > 1) {
+                value = value.substring(0, value.lastIndexOf(',')) + value.substring(value.lastIndexOf(',') + 1).replace(/,/g, '');
+            }
+            e.target.value = formatRupiah(value);
+        });
+
+        async function loadBrands() { 
+            if (WEB_APP_URL === "") return;
+
+            try {
+                const response = await fetch(`${WEB_APP_URL}?action=getBrands`, {
+                    method: 'GET', mode: 'cors'
+                });
+                const result = await response.json();
+
+                if (result.result === 'success' && result.brands.length > 0) {
+                    brandSelect.innerHTML = '<option value="" disabled selected>Pilih Brand</option>';
+                    result.brands.forEach(brand => {
+                        const option = document.createElement('option');
+                        option.value = brand;
+                        option.textContent = brand;
+                        brandSelect.appendChild(option);
+                    });
+                } else {
+                    brandSelect.innerHTML = '<option value="" disabled selected>Gagal Memuat Brand</option>';
+                    showToast('Gagal memuat brands.', 'error');
+                }
+            } catch (error) {
+                brandSelect.innerHTML = '<option value="" disabled selected>Error Koneksi</option>';
+                showToast('Error koneksi saat memuat brands. Cek URL.', 'error');
+            }
+        }
+        
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (document.getElementById('data_belum').checked) {
+                showModal();
+                return; 
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Mengirim...';
+            
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            // FIX: Tambahkan parameter action
+            data.action = 'saveMainData'; 
+
+            data.harga = data.harga.replace(/\./g, '').replace(/,/g, '.');
+            data.is_advanced = advancedTaskCheckbox.checked ? 'TRUE' : 'FALSE';
+
+            try {
+                if (WEB_APP_URL === "") {
+                    throw new Error("URL Web App belum diisi.");
+                }
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST', mode: 'cors', cache: 'no-cache',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams(data).toString() 
+                });
+
+                const result = await response.json();
+                
+                if (result.result === 'success') {
+                    showToast(`Data Berhasil Disimpan! ID: ${result.id}`, 'success');
+                    form.reset(); 
+                    advancedFieldsDiv.classList.remove('show');
+                    
+                    document.getElementById('data_sudah').checked = false;
+                    document.getElementById('data_belum').checked = false;
+                    loadBrands(); 
+                } else {
+                    showToast(`Gagal: ${result.message}`, 'error');
+                }
+
+            } catch (error) {
+                showToast(`Terjadi kesalahan koneksi: ${error.message || 'Cek URL Apps Script Anda.'}`, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Kirim Data';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadBrands();
+            
+            form.querySelectorAll('input:not([name="data_check"]), select, button[type="submit"]').forEach(el => {
+                if (el.id !== 'submitBtn') {
+                    el.disabled = true;
+                }
+            });
+            submitBtn.disabled = true;
+        });
+    </script>
+</body>
+</html>
