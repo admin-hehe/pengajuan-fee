@@ -15,12 +15,35 @@
                         'primary-active': '#4f46e5', 
                         'primary-dark': '#6366f1', 
                     },
+                    borderRadius: {
+                        'xl': '1rem',
+                    }
                 }
             }
         }
     </script>
 
     <style>
+        /* Animasi Spinner */
+        .spinner {
+            animation: rotate 2s linear infinite;
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .spinner .path {
+            stroke: currentColor;
+            stroke-linecap: round;
+            animation: dash 1.5s ease-in-out infinite;
+        }
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
+        @keyframes dash {
+            0% { stroke-dasharray: 1, 150; stroke-dashoffset: 0; }
+            50% { stroke-dasharray: 90, 150; stroke-dashoffset: -35; }
+            100% { stroke-dasharray: 90, 150; stroke-dashoffset: -124; }
+        }
+
         .advanced-fields {
             max-height: 0;
             overflow: hidden;
@@ -30,348 +53,273 @@
             opacity: 0;
         }
         .advanced-fields.show {
-            max-height: 150px; 
+            max-height: 200px; 
             padding-top: 1rem;
             padding-bottom: 1rem;
             opacity: 1;
         }
-        #advanced_task {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
+
         .modal-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            pointer-events: none;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000; opacity: 0; pointer-events: none;
             transition: opacity 0.3s ease;
+            backdrop-filter: blur(4px);
         }
-        .modal-overlay.open {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        /* Gaya Toast Notification */
-        #toast-container {
-        position: fixed;
-        /* Ganti dari bottom/right ke top/center */
-        top: 1rem;
-        left: 50%;
-        transform: translateX(-50%); /* Memastikan berada tepat di tengah */
-        z-index: 1010;
-        display: flex; /* Untuk menampung jika ada lebih dari satu toast */
-        flex-direction: column;
-        align-items: center; /* Memastikan toast berada di tengah container */
-    }
-    .toast {
-        opacity: 0;
-        /* Ganti transisi agar muncul dari atas */
-        transform: translateY(-100%); 
-        transition: opacity 0.3s ease, transform 0.3s ease;
-        margin-bottom: 0.5rem; /* Jarak antar toast jika ada lebih dari satu */
-        /* Tambahkan lebar agar tidak terlalu lebar di tengah */
-        width: 100%;
-        max-width: 400px; 
-    }
-    .toast.show {
-        opacity: 1;
-        transform: translateY(0);
-    }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-screen p-4 transition-colors duration-500">
     <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-2xl transition-colors duration-500">
-        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6">Form Input</h2>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100 text-center mb-6">Form Input Pengajuan Fee</h2>
+        
         <form id="dataForm">
-            
-            <div id="checkDataContainer" class="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900 rounded-lg border border-yellow-200 dark:border-yellow-700 transition-colors duration-500">
+            <div id="checkDataContainer" class="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-xl border border-yellow-200 dark:border-yellow-700 transition-colors duration-500">
                 <p class="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Apakah vendor sudah mengisi Form Data?</p>
                 <div class="flex space-x-6">
-                    <label class="inline-flex items-center">
-                        <input type="radio" name="data_check" value="Sudah" id="data_sudah" class="form-radio text-green-600 h-5 w-5 dark:bg-gray-700 dark:border-gray-500" required>
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="radio" name="data_check" value="Sudah" id="data_sudah" class="form-radio text-green-600 h-5 w-5 dark:bg-gray-700" required>
                         <span class="ml-2 text-gray-700 dark:text-gray-300">Sudah</span>
                     </label>
-                    <label class="inline-flex items-center">
-                        <input type="radio" name="data_check" value="Belum" id="data_belum" class="form-radio text-red-600 h-5 w-5 dark:bg-gray-700 dark:border-gray-500">
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="radio" name="data_check" value="Belum" id="data_belum" class="form-radio text-red-600 h-5 w-5 dark:bg-gray-700">
                         <span class="ml-2 text-gray-700 dark:text-gray-300">Belum</span>
                     </label>
                 </div>
             </div>
 
-            <div id="advancedTaskContainer" class="mb-6 flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors duration-500">
+            <div class="mb-6 flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600">
                 <p class="text-lg font-semibold text-gray-700 dark:text-gray-300">Advanced Task</p>
-                <input type="checkbox" id="advanced_task" class="text-primary-active border-gray-300 rounded focus:ring-primary-active dark:bg-gray-600 dark:border-gray-500">
+                <input type="checkbox" id="advanced_task" class="w-5 h-5 text-primary-active border-gray-300 rounded focus:ring-primary-active cursor-pointer">
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="pic" class="block text-sm font-medium text-gray-700 dark:text-gray-300">PIC</label>
-                    <input type="text" id="pic" name="pic" required class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md shadow-sm focus:ring-primary-active focus:border-primary-active">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">PIC</label>
+                    <input type="text" id="pic" name="pic" required class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:ring-primary-active focus:border-primary-active">
                 </div>
                 <div>
-                    <label for="nama_kegiatan" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Kegiatan</label>
-                    <input type="text" id="nama_kegiatan" name="nama_kegiatan" required class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md shadow-sm focus:ring-primary-active focus:border-primary-active">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Kegiatan</label>
+                    <input type="text" id="nama_kegiatan" name="nama_kegiatan" required class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:ring-primary-active focus:border-primary-active">
                 </div>
                 <div>
-                    <label for="nama_vendor" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Vendor</label>
-                    <input type="text" id="nama_vendor" name="nama_vendor" required class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md shadow-sm focus:ring-primary-active focus:border-primary-active">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama Vendor</label>
+                    <input type="text" id="nama_vendor" name="nama_vendor" required class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:ring-primary-active focus:border-primary-active">
                 </div>
                 <div>
-                    <label for="kode" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Kode</label>
-                    <input type="text" id="kode" name="kode" required class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md shadow-sm focus:ring-primary-active focus:border-primary-active">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Kode</label>
+                    <input type="text" id="kode" name="kode" required class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:ring-primary-active focus:border-primary-active">
                 </div>
                 <div>
-                    <label for="harga" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Harga</label>
-                    <input type="text" id="harga" name="harga" required inputmode="numeric" class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md shadow-sm focus:ring-primary-active focus:border-primary-active">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Harga</label>
+                    <input type="text" id="harga" name="harga" required inputmode="numeric" class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:ring-primary-active focus:border-primary-active">
                 </div>
                 <div>
-                    <label for="brand" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Brand</label>
-                    <select id="brand" name="brand" required class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md shadow-sm focus:ring-primary-active focus:border-primary-active">
-                        <option value="" disabled selected>Memuat Brand...</option>
-                    </select>
-                </div>
-            </div>
-
-            <div id="advancedFields" class="advanced-fields bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg mt-4 px-4 transition duration-500 ease-in-out">
-                <div class="space-y-4">
-                    <h3 class="text-xl font-semibold text-red-700 dark:text-red-400 pt-2">Detail Advanced Task</h3>
-                    <div>
-                        <label for="tanggal_task" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Estimasi Tanggal Selesai</label>
-                        <input type="date" id="tanggal_task" name="tanggal_task" class="mt-1 block w-full px-2 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500" disabled>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Brand</label>
+                    <div class="relative">
+                        <select id="brand" name="brand" required class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:ring-primary-active focus:border-primary-active appearance-none">
+                            <option value="" disabled selected>Memuat Brand...</option>
+                        </select>
+                        <div id="brandLoader" class="absolute right-3 top-3 hidden">
+                            <svg class="spinner" viewBox="0 0 50 50"><circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle></svg>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <button type="submit" id="submitBtn" class="mt-6 w-full bg-primary-active hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition duration-150 ease-in-out dark:bg-primary-dark dark:hover:bg-indigo-600">
-                Kirim Data
+            <div id="advancedFields" class="advanced-fields bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl mt-4 px-4">
+                <div class="space-y-4">
+                    <h3 class="text-xl font-semibold text-red-700 dark:text-red-400 pt-2">Detail Advanced Task</h3>
+                    <div class="pb-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Estimasi Tanggal Selesai</label>
+                        <input type="date" id="tanggal_task" name="tanggal_task" class="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:ring-red-500">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="mt-6 w-full bg-primary-active hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                <span id="btnText">Kirim Data</span>
+                <span id="btnSpinner" class="hidden">
+                    <svg class="spinner text-white" viewBox="0 0 50 50"><circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle></svg>
+                </span>
             </button>
         </form>
     </div>
 
     <div id="dataCheckModal" class="modal-overlay">
-        <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-2xl max-w-sm w-full transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl max-w-sm w-full transform transition-all duration-300 scale-95 opacity-0 modal-content">
             <h3 class="text-2xl font-bold text-red-600 dark:text-red-400 mb-4">🚨 Data Belum Lengkap!</h3>
-            <p class="text-gray-700 dark:text-gray-300 mb-6">Anda harus memastikan semua data pendukung telah tersedia sebelum melanjutkan pengisian formulir ini.</p>
-            <button onclick="hideModal()" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded-lg transition duration-150">
+            <p class="text-gray-700 dark:text-gray-300 mb-6">Pastikan semua data pendukung tersedia sebelum mengisi form.</p>
+            <button onclick="hideModal('dataCheckModal')" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded-xl transition">
                 Tutup & Perbaiki
             </button>
         </div>
     </div>
-    
-    <div id="toast-container"></div>
+
+    <div id="successModal" class="modal-overlay">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl max-w-sm w-full transform transition-all duration-300 scale-95 opacity-0 modal-content">
+            <div class="text-center">
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 dark:bg-green-900 mb-4">
+                    <span class="text-3xl">✅</span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Berhasil Disimpan!</h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-6">Data pengajuan telah tercatat dalam sistem.</p>
+                
+                <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded-xl mb-6 border border-gray-200 dark:border-gray-600 flex items-center justify-between">
+                    <span class="text-sm font-mono text-gray-500 dark:text-gray-300 truncate mr-2" id="generatedId">ID: LOADING...</span>
+                    <button onclick="copyId()" class="bg-primary-active text-white text-xs px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition flex-shrink-0">
+                        Copy ID
+                    </button>
+                </div>
+
+                <button onclick="hideModal('successModal')" class="w-full bg-gray-800 dark:bg-gray-600 hover:bg-gray-900 dark:hover:bg-gray-500 text-white font-bold py-2 rounded-xl transition">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxi78hSKpgQTi_efSulodQpjUYQUDhQokoJsL7d66R9KCRlV8UOCuZB_tLZ6n6GUoW6pw/exec"; 
-        
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyIvtckHkcYQae3zjXjxDNvlLCU-U8j-g7cjIhl--CKKdMy_kygnDLMxnvschSPdowbXQ/exec"; // Isi dengan URL Apps Script Anda
         const form = document.getElementById('dataForm');
         const submitBtn = document.getElementById('submitBtn');
-        const hargaInput = document.getElementById('harga');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
         const brandSelect = document.getElementById('brand');
+        const brandLoader = document.getElementById('brandLoader');
 
-        const advancedTaskCheckbox = document.getElementById('advanced_task');
-        const advancedFieldsDiv = document.getElementById('advancedFields');
-        const tanggalTaskInput = document.getElementById('tanggal_task');
-        
-        const dataCheckRadio = document.getElementsByName('data_check');
-        const dataBelum = document.getElementById('data_belum');
-        const modalOverlay = document.getElementById('dataCheckModal');
-        const modalContent = document.getElementById('modalContent');
-        
-        function showModal() {
-            modalOverlay.classList.add('open');
-            modalContent.classList.remove('scale-95', 'opacity-0');
-            modalContent.classList.add('scale-100', 'opacity-100');
+        // Fungsi General Modal
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const content = modal.querySelector('.modal-content');
+            modal.classList.add('open');
+            setTimeout(() => content.classList.replace('opacity-0', 'opacity-100'), 10);
+            content.classList.replace('scale-95', 'scale-100');
         }
 
-        function hideModal() {
-            modalContent.classList.remove('scale-100', 'opacity-100');
-            modalContent.classList.add('scale-95', 'opacity-0');
+        function hideModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const content = modal.querySelector('.modal-content');
+            content.classList.replace('scale-100', 'scale-95');
+            content.classList.replace('opacity-100', 'opacity-0');
+            setTimeout(() => modal.classList.remove('open'), 300);
             
-            setTimeout(() => {
-                modalOverlay.classList.remove('open');
-            }, 300);
-            
-            dataBelum.checked = false; 
-            
-            document.getElementById('checkDataContainer').scrollIntoView({ behavior: 'smooth' });
-        }
-        
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            const colorClass = type === 'success' ? 'bg-green-500' : 'bg-red-500';
-            const icon = type === 'success' ? '✅' : '❌';
-            
-            const toast = document.createElement('div');
-            toast.className = `toast p-4 rounded-lg shadow-xl mb-3 text-white max-w-sm ${colorClass}`;
-            toast.innerHTML = `<div class="flex items-center"><span class="text-xl mr-2">${icon}</span><span>${message}</span></div>`;
-            
-            container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.classList.add('show');
-            }, 10);
-
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 300); 
-            }, 4000); 
-        }
-
-        dataCheckRadio.forEach(radio => {
-            radio.addEventListener('change', function() {
-                const fields = form.querySelectorAll('input:not([name="data_check"]), select, button[type="submit"]');
-                if (this.value === 'Belum' && this.checked) {
-                    showModal();
-                    fields.forEach(el => { if (el.id !== 'submitBtn') el.disabled = true; });
-                    submitBtn.disabled = true;
-                } else if (this.value === 'Sudah' && this.checked) {
-                    fields.forEach(el => { el.disabled = false; });
-                    submitBtn.disabled = false;
-                    
-                    if (!advancedTaskCheckbox.checked) {
-                        tanggalTaskInput.disabled = true;
-                    }
-                }
-            });
-        });
-
-        advancedTaskCheckbox.addEventListener('change', function() {
-            if (document.getElementById('data_sudah').checked) {
-                if (this.checked) {
-                    advancedFieldsDiv.classList.add('show');
-                    tanggalTaskInput.required = true;
-                    tanggalTaskInput.disabled = false;
-                } else {
-                    advancedFieldsDiv.classList.remove('show');
-                    tanggalTaskInput.required = false;
-                    tanggalTaskInput.disabled = true;
-                    tanggalTaskInput.value = ''; 
-                }
-            } else {
-                this.checked = false; 
-                showModal();
+            if(modalId === 'dataCheckModal') {
+                document.getElementById('data_belum').checked = false;
             }
-        });
-        
-        function formatRupiah(angka) { 
-            let number_string = angka.replace(/[^,\d]/g, '').toString(); 
-            let split = number_string.split(',');
+        }
+
+        function copyId() {
+            const text = document.getElementById('generatedId').textContent.replace('ID: ', '');
+            navigator.clipboard.writeText(text).then(() => {
+                const copyBtn = event.target;
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = 'Copied!';
+                copyBtn.classList.replace('bg-primary-active', 'bg-green-600');
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                    copyBtn.classList.replace('bg-green-600', 'bg-primary-active');
+                }, 2000);
+            });
+        }
+
+        // Logic Input Harga & Brand (Tetap Sama)
+        async function loadBrands() {
+            if (WEB_APP_URL === "") return;
+            brandLoader.classList.remove('hidden');
+            try {
+                const response = await fetch(`${WEB_APP_URL}?action=getBrands`);
+                const result = await response.json();
+                if (result.result === 'success') {
+                    brandSelect.innerHTML = '<option value="" disabled selected>Pilih Brand</option>';
+                    result.brands.forEach(b => {
+                        const opt = document.createElement('option');
+                        opt.value = b; opt.textContent = b;
+                        brandSelect.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                brandSelect.innerHTML = '<option value="" disabled>Gagal memuat data</option>';
+            } finally {
+                brandLoader.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('harga').addEventListener('keyup', function(e) {
+            let val = e.target.value.replace(/[^,\d]/g, '');
+            let split = val.split(',');
             let sisa = split[0].length % 3;
             let rupiah = split[0].substr(0, sisa);
             let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
             if (ribuan) {
-                separator = sisa ? '.' : '';
+                let separator = sisa ? '.' : '';
                 rupiah += separator + ribuan.join('.');
             }
-            rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
-            return rupiah;
-        }
-
-        hargaInput.addEventListener('keyup', function(e) {
-            let value = e.target.value;
-            if ((value.match(/,/g) || []).length > 1) {
-                value = value.substring(0, value.lastIndexOf(',')) + value.substring(value.lastIndexOf(',') + 1).replace(/,/g, '');
-            }
-            e.target.value = formatRupiah(value);
+            e.target.value = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
         });
 
-        async function loadBrands() { 
-            if (WEB_APP_URL === "") return;
-
-            try {
-                const response = await fetch(`${WEB_APP_URL}?action=getBrands`, {
-                    method: 'GET', mode: 'cors'
-                });
-                const result = await response.json();
-
-                if (result.result === 'success' && result.brands.length > 0) {
-                    brandSelect.innerHTML = '<option value="" disabled selected>Pilih Brand</option>';
-                    result.brands.forEach(brand => {
-                        const option = document.createElement('option');
-                        option.value = brand;
-                        option.textContent = brand;
-                        brandSelect.appendChild(option);
-                    });
-                } else {
-                    brandSelect.innerHTML = '<option value="" disabled selected>Gagal Memuat Brand</option>';
-                    showToast('Gagal memuat brands.', 'error');
-                }
-            } catch (error) {
-                brandSelect.innerHTML = '<option value="" disabled selected>Error Koneksi</option>';
-                showToast('Error koneksi saat memuat brands. Cek URL.', 'error');
+        document.getElementById('advanced_task').addEventListener('change', function() {
+            const fields = document.getElementById('advancedFields');
+            const input = document.getElementById('tanggal_task');
+            if(this.checked) {
+                fields.classList.add('show');
+                input.required = true;
+            } else {
+                fields.classList.remove('show');
+                input.required = false;
+                input.value = '';
             }
-        }
-        
-        form.addEventListener('submit', async function(e) {
+        });
+
+        // Submit Logic dengan Success Modal
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            if (document.getElementById('data_belum').checked) {
-                showModal();
-                return; 
-            }
-            
+            btnText.textContent = 'Mengirim...';
+            btnSpinner.classList.remove('hidden');
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Mengirim...';
-            
+
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
-
-            // FIX: Tambahkan parameter action
-            data.action = 'saveMainData'; 
-
+            data.action = 'saveMainData';
             data.harga = data.harga.replace(/\./g, '').replace(/,/g, '.');
-            data.is_advanced = advancedTaskCheckbox.checked ? 'TRUE' : 'FALSE';
 
             try {
-                if (WEB_APP_URL === "") {
-                    throw new Error("URL Web App belum diisi.");
-                }
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST', mode: 'cors', cache: 'no-cache',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams(data).toString() 
+                const res = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams(data)
                 });
-
-                const result = await response.json();
-                
-                if (result.result === 'success') {
-                    showToast(`Data Berhasil Disimpan! ID: ${result.id}`, 'success');
-                    form.reset(); 
-                    advancedFieldsDiv.classList.remove('show');
-                    
-                    document.getElementById('data_sudah').checked = false;
-                    document.getElementById('data_belum').checked = false;
-                    loadBrands(); 
+                const result = await res.json();
+                if(result.result === 'success') {
+                    // Update ID di modal sukses
+                    document.getElementById('generatedId').textContent = `ID: ${result.id}`;
+                    showModal('successModal');
+                    form.reset();
+                    document.getElementById('advancedFields').classList.remove('show');
                 } else {
-                    showToast(`Gagal: ${result.message}`, 'error');
+                    alert('Gagal: ' + result.message);
                 }
-
-            } catch (error) {
-                showToast(`Terjadi kesalahan koneksi: ${error.message || 'Cek URL Apps Script Anda.'}`, 'error');
+            } catch (err) {
+                alert('Terjadi kesalahan koneksi.');
             } finally {
+                btnText.textContent = 'Kirim Data';
+                btnSpinner.classList.add('hidden');
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Kirim Data';
             }
         });
 
         document.addEventListener('DOMContentLoaded', () => {
             loadBrands();
+            const inputs = form.querySelectorAll('input:not([name="data_check"]), select, button[type="submit"]');
+            inputs.forEach(el => el.disabled = true);
             
-            form.querySelectorAll('input:not([name="data_check"]), select, button[type="submit"]').forEach(el => {
-                if (el.id !== 'submitBtn') {
-                    el.disabled = true;
-                }
+            document.getElementsByName('data_check').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if(this.value === 'Belum') showModal('dataCheckModal');
+                    inputs.forEach(el => el.disabled = (this.value === 'Belum'));
+                });
             });
-            submitBtn.disabled = true;
         });
     </script>
 </body>
