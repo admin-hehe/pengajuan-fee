@@ -169,8 +169,8 @@
                 
                 <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded-xl mb-6 border border-gray-200 dark:border-gray-600 flex items-center justify-between">
                     <span class="text-sm font-mono text-gray-500 dark:text-gray-300 truncate mr-2" id="generatedId">ID: LOADING...</span>
-                    <button onclick="copyId()" class="bg-primary-active text-white text-xs px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition flex-shrink-0">
-                        Copy ID
+                    <button onclick="copyFullData()" class="bg-primary-active text-white text-xs px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition flex-shrink-0">
+                        Copy Detail Data
                     </button>
                 </div>
 
@@ -182,145 +182,173 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyIvtckHkcYQae3zjXjxDNvlLCU-U8j-g7cjIhl--CKKdMy_kygnDLMxnvschSPdowbXQ/exec"; // Isi dengan URL Apps Script Anda
-        const form = document.getElementById('dataForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const btnText = document.getElementById('btnText');
-        const btnSpinner = document.getElementById('btnSpinner');
-        const brandSelect = document.getElementById('brand');
-        const brandLoader = document.getElementById('brandLoader');
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyIvtckHkcYQae3zjXjxDNvlLCU-U8j-g7cjIhl--CKKdMy_kygnDLMxnvschSPdowbXQ/exec"; // Isi dengan URL Apps Script Anda
+    const form = document.getElementById('dataForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const brandSelect = document.getElementById('brand');
+    const brandLoader = document.getElementById('brandLoader');
 
-        // Fungsi General Modal
-        function showModal(modalId) {
-            const modal = document.getElementById(modalId);
-            const content = modal.querySelector('.modal-content');
-            modal.classList.add('open');
-            setTimeout(() => content.classList.replace('opacity-0', 'opacity-100'), 10);
-            content.classList.replace('scale-95', 'scale-100');
+    // Variabel global untuk menyimpan data terakhir agar bisa di-copy
+    let lastSubmittedData = {};
+
+    function showModal(modalId) {
+        const modal = document.getElementById(modalId);
+        const content = modal.querySelector('.modal-content');
+        modal.classList.add('open');
+        setTimeout(() => content.classList.replace('opacity-0', 'opacity-100'), 10);
+        content.classList.replace('scale-95', 'scale-100');
+    }
+
+    function hideModal(modalId) {
+        const modal = document.getElementById(modalId);
+        const content = modal.querySelector('.modal-content');
+        content.classList.replace('scale-100', 'scale-95');
+        content.classList.replace('opacity-100', 'opacity-0');
+        setTimeout(() => modal.classList.remove('open'), 300);
+        
+        if(modalId === 'dataCheckModal') {
+            document.getElementById('data_belum').checked = false;
         }
+    }
 
-        function hideModal(modalId) {
-            const modal = document.getElementById(modalId);
-            const content = modal.querySelector('.modal-content');
-            content.classList.replace('scale-100', 'scale-95');
-            content.classList.replace('opacity-100', 'opacity-0');
-            setTimeout(() => modal.classList.remove('open'), 300);
-            
-            if(modalId === 'dataCheckModal') {
-                document.getElementById('data_belum').checked = false;
-            }
-        }
-
-        function copyId() {
-            const text = document.getElementById('generatedId').textContent.replace('ID: ', '');
-            navigator.clipboard.writeText(text).then(() => {
-                const copyBtn = event.target;
-                const originalText = copyBtn.textContent;
-                copyBtn.textContent = 'Copied!';
-                copyBtn.classList.replace('bg-primary-active', 'bg-green-600');
-                setTimeout(() => {
-                    copyBtn.textContent = originalText;
-                    copyBtn.classList.replace('bg-green-600', 'bg-primary-active');
-                }, 2000);
-            });
-        }
-
-        // Logic Input Harga & Brand (Tetap Sama)
-        async function loadBrands() {
-            if (WEB_APP_URL === "") return;
-            brandLoader.classList.remove('hidden');
-            try {
-                const response = await fetch(`${WEB_APP_URL}?action=getBrands`);
-                const result = await response.json();
-                if (result.result === 'success') {
-                    brandSelect.innerHTML = '<option value="" disabled selected>Pilih Brand</option>';
-                    result.brands.forEach(b => {
-                        const opt = document.createElement('option');
-                        opt.value = b; opt.textContent = b;
-                        brandSelect.appendChild(opt);
-                    });
-                }
-            } catch (e) {
-                brandSelect.innerHTML = '<option value="" disabled>Gagal memuat data</option>';
-            } finally {
-                brandLoader.classList.add('hidden');
-            }
-        }
-
-        document.getElementById('harga').addEventListener('keyup', function(e) {
-            let val = e.target.value.replace(/[^,\d]/g, '');
-            let split = val.split(',');
-            let sisa = split[0].length % 3;
-            let rupiah = split[0].substr(0, sisa);
-            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-            if (ribuan) {
-                let separator = sisa ? '.' : '';
-                rupiah += separator + ribuan.join('.');
-            }
-            e.target.value = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+    // FUNGSI BARU: Copy Data Lengkap
+    function copyFullData() {
+        const d = lastSubmittedData;
+        
+        // Format nominal harga agar rapi (Rp 1.000.000)
+        const formatter = new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0
         });
 
-        document.getElementById('advanced_task').addEventListener('change', function() {
-            const fields = document.getElementById('advancedFields');
-            const input = document.getElementById('tanggal_task');
-            if(this.checked) {
-                fields.classList.add('show');
-                input.required = true;
+        // Template pesan yang akan di-copy
+        const textToCopy = 
+            `*DETAIL PENGAJUAN FEE*\n` +
+            `---------------------------\n` +
+            `🆔 *ID:* ${d.id}\n` +
+            `👤 *PIC:* ${d.pic}\n` +
+            `📅 *Kegiatan:* ${d.nama_kegiatan}\n` +
+            `🏢 *Vendor:* ${d.nama_vendor}\n` +
+            `🔖 *Brand:* ${d.brand}\n` +
+            `🔢 *Kode Budget:* ${d.kode}\n` +
+            `💰 *Total Harga:* ${formatter.format(d.harga)}\n` +
+            (d.tanggal_task ? `⏳ *Estimasi Selesai:* ${d.tanggal_task}\n` : "") +
+            `---------------------------`;
+
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            const copyBtn = event.target;
+            const originalText = copyBtn.textContent;
+            copyBtn.textContent = 'Copied! ✅';
+            copyBtn.classList.replace('bg-primary-active', 'bg-green-600');
+            setTimeout(() => {
+                copyBtn.textContent = originalText;
+                copyBtn.classList.replace('bg-green-600', 'bg-primary-active');
+            }, 2000);
+        });
+    }
+
+    async function loadBrands() {
+        if (WEB_APP_URL === "") return;
+        brandLoader.classList.remove('hidden');
+        try {
+            const response = await fetch(`${WEB_APP_URL}?action=getBrands`);
+            const result = await response.json();
+            if (result.result === 'success') {
+                brandSelect.innerHTML = '<option value="" disabled selected>Pilih Brand</option>';
+                result.brands.forEach(b => {
+                    const opt = document.createElement('option');
+                    opt.value = b; opt.textContent = b;
+                    brandSelect.appendChild(opt);
+                });
+            }
+        } catch (e) {
+            brandSelect.innerHTML = '<option value="" disabled>Gagal memuat data</option>';
+        } finally {
+            brandLoader.classList.add('hidden');
+        }
+    }
+
+    // Format input harga
+    document.getElementById('harga').addEventListener('keyup', function(e) {
+        let val = e.target.value.replace(/[^,\d]/g, '');
+        let split = val.split(',');
+        let sisa = split[0].length % 3;
+        let rupiah = split[0].substr(0, sisa);
+        let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+        if (ribuan) {
+            let separator = sisa ? '.' : '';
+            rupiah += separator + ribuan.join('.');
+        }
+        e.target.value = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+    });
+
+    document.getElementById('advanced_task').addEventListener('change', function() {
+        const fields = document.getElementById('advancedFields');
+        const input = document.getElementById('tanggal_task');
+        if(this.checked) {
+            fields.classList.add('show');
+            input.required = true;
+        } else {
+            fields.classList.remove('show');
+            input.required = false;
+            input.value = '';
+        }
+    });
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        btnText.textContent = 'Mengirim...';
+        btnSpinner.classList.remove('hidden');
+        submitBtn.disabled = true;
+
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        data.action = 'saveMainData';
+        // Simpan harga asli (tanpa titik) ke objek data
+        data.harga = data.harga.replace(/\./g, '').replace(/,/g, '.');
+
+        try {
+            const res = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: new URLSearchParams(data)
+            });
+            const result = await res.json();
+            
+            if(result.result === 'success') {
+                // SIMPAN DATA KE VARIABEL GLOBAL SEBELUM FORM DIRESET
+                lastSubmittedData = { ...data, id: result.id };
+                
+                document.getElementById('generatedId').textContent = `ID: ${result.id}`;
+                showModal('successModal');
+                form.reset();
+                document.getElementById('advancedFields').classList.remove('show');
             } else {
-                fields.classList.remove('show');
-                input.required = false;
-                input.value = '';
+                alert('Gagal: ' + result.message);
             }
-        });
+        } catch (err) {
+            alert('Terjadi kesalahan koneksi.');
+        } finally {
+            btnText.textContent = 'Kirim Data';
+            btnSpinner.classList.add('hidden');
+            submitBtn.disabled = false;
+        }
+    });
 
-        // Submit Logic dengan Success Modal
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            btnText.textContent = 'Mengirim...';
-            btnSpinner.classList.remove('hidden');
-            submitBtn.disabled = true;
-
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-            data.action = 'saveMainData';
-            data.harga = data.harga.replace(/\./g, '').replace(/,/g, '.');
-
-            try {
-                const res = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    body: new URLSearchParams(data)
-                });
-                const result = await res.json();
-                if(result.result === 'success') {
-                    // Update ID di modal sukses
-                    document.getElementById('generatedId').textContent = `ID: ${result.id}`;
-                    showModal('successModal');
-                    form.reset();
-                    document.getElementById('advancedFields').classList.remove('show');
-                } else {
-                    alert('Gagal: ' + result.message);
-                }
-            } catch (err) {
-                alert('Terjadi kesalahan koneksi.');
-            } finally {
-                btnText.textContent = 'Kirim Data';
-                btnSpinner.classList.add('hidden');
-                submitBtn.disabled = false;
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadBrands();
-            const inputs = form.querySelectorAll('input:not([name="data_check"]), select, button[type="submit"]');
-            inputs.forEach(el => el.disabled = true);
-            
-            document.getElementsByName('data_check').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    if(this.value === 'Belum') showModal('dataCheckModal');
-                    inputs.forEach(el => el.disabled = (this.value === 'Belum'));
-                });
+    document.addEventListener('DOMContentLoaded', () => {
+        loadBrands();
+        const inputs = form.querySelectorAll('input:not([name="data_check"]), select, button[type="submit"]');
+        inputs.forEach(el => el.disabled = true);
+        
+        document.getElementsByName('data_check').forEach(radio => {
+            radio.addEventListener('change', function() {
+                if(this.value === 'Belum') showModal('dataCheckModal');
+                inputs.forEach(el => el.disabled = (this.value === 'Belum'));
             });
         });
-    </script>
+    });
+</script>
 </body>
 </html>
