@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>Form Pengajuan Fee</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -23,11 +23,53 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
 
-        .form-input {
-            width: 100%; padding: 0.625rem 1rem; border-radius: 0.75rem; outline: none;
-            transition: all 0.2s; border: 1px solid; font-size: 0.875rem;
+.form-input {
+    width: 117.65%; /* Ini adalah hasil dari 100/0.85 */
+    height: 44px; 
+    padding: 0 1rem; 
+    border-radius: 0.75rem; 
+    outline: none;
+    border: 1px solid; 
+    font-size: 16px; 
+    transform: scale(0.85); 
+    transform-origin: left center; 
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+}
+
+.grid > div {
+    overflow: hidden;
+}
+
+        /* Mengecilkan visual font di desktop tanpa memicu zoom di mobile */
+        @media (min-width: 768px) {
+            .form-input { font-size: 0.875rem; height: 38px; }
+        }
+
+        /* Fix iOS Date Picker & Icon Alignment */
+        input[type="date"] {
+            position: relative;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input[type="date"]::-webkit-date-and-time-value {
+            text-align: left;
+            height: 44px;
+            line-height: 44px;
+        }
+
+        /* Memaksa ikon kalender bawaan ke kanan */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            background-color: transparent;
+            cursor: pointer;
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
         }
 
         @media (prefers-color-scheme: light) {
@@ -38,6 +80,7 @@
         @media (prefers-color-scheme: dark) {
             .form-input { background-color: #1e293b; border-color: #334155; color: #f8fafc; }
             .form-input:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2); }
+            input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.8); }
         }
 
         .advanced-fields { max-height: 0; opacity: 0; overflow: hidden; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -49,6 +92,23 @@
             z-index: 1000; opacity: 0; pointer-events: none; transition: 0.3s; backdrop-filter: blur(8px);
         }
         .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        
+/* Update agar posisi Rp selaras dengan scale input */
+.price-prefix {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%) scale(0.85); /* Ikut mengecil agar serasi */
+    transform-origin: left center;
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* Pastikan input harga punya padding kiri yang cukup untuk tempat Rp */
+#harga {
+    padding-left: 3.2rem !important; 
+}
+
     </style>
 </head>
 <body class="bg-[#f8fafc] dark:bg-[#020617] min-h-screen flex flex-col items-center justify-center p-4">
@@ -97,7 +157,7 @@
                         <select id="brand" name="brand" required class="form-input appearance-none cursor-pointer">
                             <option value="" disabled selected>Pilih Brand</option>
                         </select>
-                        <i data-lucide="chevron-down" class="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                        <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
                     </div>
                 </div>
 
@@ -105,10 +165,14 @@
                 <div><label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">PIC Internal</label><input type="text" name="pic" required class="form-input" placeholder="Nama PIC"></div>
                 <div><label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Kegiatan</label><input type="text" name="nama_kegiatan" required class="form-input" placeholder="Detail Kegiatan"></div>
                 <div><label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Kode Budget</label><input type="text" name="kode" required class="form-input" placeholder="WBS / Cost Center"></div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Total Harga</label>
-                    <div class="relative"><span class="absolute left-3 top-2.5 text-slate-400 text-sm font-bold">Rp</span><input type="text" id="harga" name="harga" required inputmode="numeric" class="form-input pl-10" placeholder="0"></div>
-                </div>
+<div>
+    <label class="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Total Harga</label>
+    <div class="relative overflow-hidden" style="width: 100%;">
+        <span class="price-prefix text-slate-400 text-sm font-bold">Rp</span>
+        <input type="text" id="harga" name="harga" required inputmode="numeric" 
+               class="form-input" placeholder="0">
+    </div>
+</div>
             </div>
 
             <div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
@@ -177,10 +241,10 @@
     }
 
     document.getElementById('harga').addEventListener('keyup', function(e) {
-        let val = e.target.value.replace(/[^,\d]/g, '');
-        let split = val.split(','), sisa = split[0].length % 3, rupiah = split[0].substr(0, sisa), ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-        if (ribuan) rupiah += (sisa ? '.' : '') + ribuan.join('.');
-        e.target.value = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+        let val = e.target.value.replace(/[^0-9]/g, '');
+        if (val) {
+            e.target.value = new Intl.NumberFormat('id-ID').format(val);
+        }
     });
 
     document.getElementById('advanced_task').addEventListener('change', function() {
@@ -220,12 +284,14 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
-        fetch(`${WEB_APP_URL}?action=getBrands`).then(r => r.json()).then(res => {
-            if(res.result === 'success') {
-                const bS = document.getElementById('brand');
-                res.brands.forEach(b => { const o = document.createElement('option'); o.value = b; o.textContent = b; bS.appendChild(o); });
-            }
-        });
+        if(WEB_APP_URL) {
+            fetch(`${WEB_APP_URL}?action=getBrands`).then(r => r.json()).then(res => {
+                if(res.result === 'success') {
+                    const bS = document.getElementById('brand');
+                    res.brands.forEach(b => { const o = document.createElement('option'); o.value = b; o.textContent = b; bS.appendChild(o); });
+                }
+            });
+        }
     });
     </script>
 </body>
