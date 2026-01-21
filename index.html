@@ -194,25 +194,27 @@
         </form>
     </div>
 
-    <div id="successModal" class="modal-overlay">
-        <div class="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-2xl max-w-sm w-full mx-4 border dark:border-slate-800 text-center">
-            <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4"><i data-lucide="check-circle" class="w-8 h-8"></i></div>
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">Berhasil Terkirim</h3>
-            <p class="text-[10px] text-slate-500 mb-4 uppercase tracking-widest font-bold">ID Pengajuan & Detail</p>
-            <div class="flex items-center justify-between bg-slate-50 dark:bg-brand-900/10 p-4 rounded-xl mb-6 border border-slate-100 dark:border-slate-800">
-                <span id="generatedId" class="text-lg font-mono font-bold text-brand-600">---</span>
-                <button onclick="copyFullData()" class="copy-btn p-2 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-all text-slate-400 hover:text-brand-600"><i data-lucide="copy" class="w-5 h-5"></i></button>
+<div id="successModal" class="modal-overlay">
+        <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-2xl max-w-sm w-full mx-4 border dark:border-slate-800 text-center">
+            <div class="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 ring-8 ring-emerald-50 dark:ring-emerald-900/10">
+                <i data-lucide="check-circle" class="w-10 h-10"></i>
             </div>
-            <button onclick="window.location.reload()" class="w-full bg-slate-900 dark:bg-slate-800 text-white font-bold py-3 rounded-xl transition">Buat Pengajuan Baru</button>
-        </div>
-    </div>
+            
+            <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-1">Berhasil Terkirim</h3>
+            <p class="text-[10px] text-slate-500 mb-6 uppercase tracking-[0.2em] font-black">ID Pengajuan Anda</p>
+            
+            <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl mb-3 border border-slate-100 dark:border-slate-700">
+                <span id="generatedId" class="text-2xl font-mono font-black text-brand-600 tracking-wider">---</span>
+            </div>
 
-    <div id="dataCheckModal" class="modal-overlay">
-        <div class="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-2xl max-w-sm w-full mx-4 border dark:border-slate-800 text-center">
-            <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4"><i data-lucide="alert-circle" class="w-8 h-8"></i></div>
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Verifikasi Diperlukan</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Vendor harus melengkapi form data sebelum pengajuan diproses.</p>
-            <button onclick="hideModal('dataCheckModal')" class="w-full bg-slate-900 dark:bg-slate-800 text-white font-bold py-3 rounded-xl transition">Tutup</button>
+            <button onclick="copyFullData()" id="mainCopyBtn" class="w-full mb-6 flex items-center justify-center gap-2 bg-brand-600/10 hover:bg-brand-600 text-brand-600 hover:text-white font-bold py-3 rounded-xl transition-all duration-300 group">
+                <i data-lucide="copy" class="w-4 h-4 group-hover:scale-110 transition-transform"></i>
+                <span id="copyBtnText">Salin Rekap Data (KLIK INI!)</span>
+            </button>
+            
+            <button onclick="window.location.reload()" class="w-full bg-slate-900 dark:bg-slate-700 text-white font-bold py-4 rounded-xl transition active:scale-[0.98]">
+                Buat Pengajuan Baru
+            </button>
         </div>
     </div>
 
@@ -228,23 +230,55 @@
         if(id === 'dataCheckModal') document.getElementsByName('data_check')[1].checked = false;
     }
 
+    // FUNGSI COPY YANG SUDAH DIPERBAIKI LOGICNYA
     function copyFullData() {
         const d = lastSubmittedData;
+        const btn = document.getElementById('mainCopyBtn');
+        const btnText = document.getElementById('copyBtnText');
         const fmt = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 });
-        const text = `*DETAIL PENGAJUAN FEE*\nID: ${d.id}\nVendor: ${d.nama_vendor}\nEmail: ${d.email_vendor}\nTelp: ${d.telp_vendor}\nPIC: ${d.pic}\nKegiatan: ${d.nama_kegiatan}\nBrand: ${d.brand}\nBudget: ${d.kode}\nTotal: ${fmt.format(d.harga)}\n${d.tanggal_task ? 'Estimasi Selesai: ' + d.tanggal_task : ''}`;
+        
+        // Logic: Hanya tampilkan estimasi jika checkbox advanced dicentang DAN tanggal ada
+        let estimasiSelesai = "";
+        if (d.advanced_task === "on" && d.tanggal_task) {
+            estimasiSelesai = `\nEstimasi Selesai: ${d.tanggal_task}`;
+        }
+
+        const text = `*DETAIL PENGAJUAN FEE*\n` +
+                     `ID: ${d.id}\n` +
+                     `Vendor: ${d.nama_vendor}\n` +
+                     `Email: ${d.email_vendor}\n` +
+                     `Telp: ${d.telp_vendor}\n` +
+                     `PIC: ${d.pic}\n` +
+                     `Kegiatan: ${d.nama_kegiatan}\n` +
+                     `Brand: ${d.brand}\n` +
+                     `Budget: ${d.kode}\n` +
+                     `Total: ${fmt.format(d.harga)}` + 
+                     estimasiSelesai;
+
         navigator.clipboard.writeText(text).then(() => {
-            const btn = document.querySelector('.copy-btn');
-            btn.innerHTML = '<i data-lucide="check" class="w-5 h-5 text-emerald-500"></i>';
+            // Feedback Visual: Hijau & Teks Berubah
+            btn.classList.replace('bg-brand-600/10', 'bg-emerald-500');
+            btn.classList.replace('text-brand-600', 'text-white');
+            btnText.textContent = "Tersalin! Kirim ke grup ya!";
+            btn.querySelector('i').remove();
+            btn.insertAdjacentHTML('afterbegin', '<i data-lucide="check" class="w-4 h-4"></i>');
             lucide.createIcons();
-            setTimeout(() => { btn.innerHTML = '<i data-lucide="copy" class="w-5 h-5"></i>'; lucide.createIcons(); }, 2000);
+
+            setTimeout(() => {
+                btn.classList.replace('bg-emerald-500', 'bg-brand-600/10');
+                btn.classList.replace('text-white', 'text-brand-600');
+                btnText.textContent = "Salin Rekap Data (KLIK INI!)";
+                btn.querySelector('i').remove();
+                btn.insertAdjacentHTML('afterbegin', '<i data-lucide="copy" class="w-4 h-4"></i>');
+                lucide.createIcons();
+            }, 2500);
         });
     }
 
+    // SISA SCRIPT (HARGA, TOGGLE, SUBMIT) TETAP SAMA NAMUN PASTIKAN DATA DIAMBIL BENAR
     document.getElementById('harga').addEventListener('keyup', function(e) {
         let val = e.target.value.replace(/[^0-9]/g, '');
-        if (val) {
-            e.target.value = new Intl.NumberFormat('id-ID').format(val);
-        }
+        if (val) e.target.value = new Intl.NumberFormat('id-ID').format(val);
     });
 
     document.getElementById('advanced_task').addEventListener('change', function() {
@@ -262,7 +296,11 @@
         document.getElementById('btnSpinner').classList.remove('hidden');
         submitBtn.disabled = true;
 
-        const data = Object.fromEntries(new FormData(form).entries());
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        
+        // Ambil status checkbox secara manual karena FormData sering skip "off"
+        data.advanced_task = document.getElementById('advanced_task').checked ? "on" : "off";
         data.action = 'saveMainData';
         data.harga = data.harga.replace(/\./g, '');
 
@@ -288,7 +326,10 @@
             fetch(`${WEB_APP_URL}?action=getBrands`).then(r => r.json()).then(res => {
                 if(res.result === 'success') {
                     const bS = document.getElementById('brand');
-                    res.brands.forEach(b => { const o = document.createElement('option'); o.value = b; o.textContent = b; bS.appendChild(o); });
+                    res.brands.forEach(b => { 
+                        const o = document.createElement('option'); 
+                        o.value = b; o.textContent = b; bS.appendChild(o); 
+                    });
                 }
             });
         }
